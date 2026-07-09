@@ -210,7 +210,7 @@ localparam CONF_STR = {
   "H0O89,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
   "O5,Orientation,Vert,Horz;",
   "OFH,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-  "OB,VFlip,Off,On;",
+  "OB,Flip Screen,Off,On;",
 //  "OC,HFlip,Off,On;",
   "-;",
   "O6,Test mode,Off,On;",
@@ -649,7 +649,7 @@ mylstar_board mylstar_board
   .reactor(reactor_r),
 
   .vflip(status[11]),
-  .hflip(1'b0)
+  .hflip(status[11])
 );
 
 // audio board
@@ -678,7 +678,7 @@ end
 
 
 
-wire rotate_ccw = ~status[11];
+wire rotate_ccw = 1'b1;
 wire no_rotate = status[5] | (mod==mod_tylz) | (mod==mod_insector) | (mod==mod_reactor) | direct_video;
 //wire scandoubler = (status[17:15] || forced_scandoubler);
 wire flip = 0;
