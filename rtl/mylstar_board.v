@@ -121,6 +121,8 @@ wire RDY1 = J9_8;
 wire [8:0] H = { K17_Q[0], J17_Q, J16_Q };
 wire [7:0] HH = { G17_Q[4:0], G16_Q[5:3] };
 wire [7:0] VV = { D15_8, D15_6, D15_3, D15_11, E15_8, E15_6, E15_11, E15_3 };
+localparam [7:0] OBJ_VV_FLIP_TRIM = 8'd4;
+wire [7:0] VV_OBJ = hflip ? (VV - OBJ_VV_FLIP_TRIM) : VV;
 wire nHH0s = F15_12;
 wire nH0 = F15_4;
 wire nVV0 = K15_10;
@@ -455,7 +457,7 @@ dpram #(.addr_width(10),.data_width(8)) E4(
 
 x74283 E5(
   .A(E4_Q[7:4]),
-  .B(VV[7:4]),
+  .B(VV_OBJ[7:4]),
   .C0(F5_C4),
   .S(E5_S)
 );
@@ -523,7 +525,7 @@ wire E17_8 = ~(&D17_Q);
 
 x74283 F5(
   .A(E4_Q[3:0]),
-  .B(VV[3:0]),
+  .B(VV_OBJ[3:0]),
   .C0(1'b0),
   .S(F5_S),
   .C4(F5_C4)
@@ -769,8 +771,12 @@ x74161 H6(
   .co(H6_co)
 );
 
+localparam [7:0] OBJ_H56_FLIP_TRIM = 8'd8;
+wire [7:0] OBJ_H56_RAW = { H6_Q, H5_Q };
+wire [7:0] OBJ_H56_ADJ = hflip ? (OBJ_H56_RAW - OBJ_H56_FLIP_TRIM) : OBJ_H56_RAW;
+
 x74157 H7(
-  .A(H6_Q),
+  .A(OBJ_H56_ADJ[7:4]),
   .B(HH[7:4]),
   .s(VV[0]),
   .en(SHIFTED_HB),
@@ -779,14 +785,14 @@ x74157 H7(
 
 x74157 H8(
   .A(HH[7:4]),
-  .B(H6_Q),
+  .B(OBJ_H56_ADJ[7:4]),
   .s(VV[0]),
   .en(SHIFTED_HB),
   .Y(H8_Y)
 );
 
 x74157 H9(
-  .A(H5_Q),
+  .A(OBJ_H56_ADJ[3:0]),
   .B(HH[3:0]),
   .s(VV[0]),
   .en(SHIFTED_HB),
@@ -795,19 +801,26 @@ x74157 H9(
 
 x74157 H10(
   .A(HH[3:0]),
-  .B(H5_Q),
+  .B(OBJ_H56_ADJ[3:0]),
   .s(VV[0]),
   .en(SHIFTED_HB),
   .Y(H10_Y)
 );
 
+wire [3:0] OBJ_PIX_RAW = J10_Q | J11_Q;
+
+wire [7:0] obj_h_blank_limit = hflip ? 8'd12 : 8'd16;
+wire obj_h_edge_blank = (H[7:0] < obj_h_blank_limit);
+
+wire [3:0] OBJ_PIX_EDGE_SAFE = obj_h_edge_blank ? 4'd0 : OBJ_PIX_RAW;
+
 wire H11_5 = ~((|G12_Y)|J12_13);
-wire H11_6 = ~((|J10_Q)|(|J11_Q));
+wire H11_6 = ~(|OBJ_PIX_EDGE_SAFE);
 
 // fg/bg priority
 x74298 H12(
   .clk(~CLK5),
-  .A(J10_Q|J11_Q),
+  .A(OBJ_PIX_EDGE_SAFE),
   .B(G12_Y),
   .s(J12_4), // 1 = bg, 0 = fg
   .Y(H12_Y)
